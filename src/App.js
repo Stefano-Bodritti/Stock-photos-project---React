@@ -11,14 +11,19 @@ const clientID = `?client_id=${process.env.REACT_APP_ACCESS_KEY}`;
 function App() {
   const [loading, setLoading] = useState(false);
   const [photos, setPhotos] = useState([]);
+  const [page, setPage] = useState(1);
 
   const fetchImages = async () => {
     setLoading(true);
-    let url = `${mainUrl}${clientID}`;
+    let url;
+    const urlPage = `&page=${page}`;
+    url = `${mainUrl}${clientID}${urlPage}`;
     try {
       const response = await fetch(url);
       const data = await response.json();
-      setPhotos(data);
+      setPhotos((oldPhotos) => {
+        return [...oldPhotos, ...data];
+      });
       setLoading(false);
     } catch (error) {
       setLoading(false);
@@ -28,6 +33,18 @@ function App() {
 
   useEffect(() => {
     fetchImages();
+  }, [page]);
+
+  useEffect(() => {
+    const event = window.addEventListener('scroll', () => {
+      if ((window.innerHeight + window.scrollY) >= document.body.scrollHeight - 2 && !loading) {
+        setPage((oldPage) => {
+          return oldPage + 1;
+        })
+      }
+
+    });
+    return () => window.removeEventListener('scroll', event);
   }, []);
 
   const handleSubmit = (e) => {
